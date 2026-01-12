@@ -1,0 +1,449 @@
+{
+  "name": "GitHub Issues to ToDo Completed",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ProgrammX",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -4240,
+        -128
+      ],
+      "id": "9c6c3f37-1282-43a0-97fd-08956a3f5008",
+      "name": "Webhook",
+      "webhookId": "b3b3cae4-a2f4-4bac-8ffe-cb17384b6545"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4638d6a5-46e8-4751-8482-3e51013176cc",
+              "name": "result.data",
+              "value": "={{ $json.result.data }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3424,
+        -416
+      ],
+      "id": "e4458c6f-3332-4af4-b630-af9a166d8893",
+      "name": "Retriving Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.result.data;\nconst names = data.map(employee => employee.name);\nreturn names.map(name => ({ json: { name } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3168,
+        -416
+      ],
+      "id": "8a9eaaa5-6d9c-4ab5-992f-963faacf92fb",
+      "name": "Get All names"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "name"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -2896,
+        -416
+      ],
+      "id": "a2c1aa26-28cd-43cc-8ba9-b3ed1051cf3b",
+      "name": "All Names"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract data from GitHub webhook payload\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const body = item.json.body;\n  \n  // Extract Issue Details\n  const issueTitle = body.issue?.title || 'No Title';\n  const issueDescription = body.issue?.body || 'No Description';\n  const issueLink = body.issue?.html_url || '';\n  \n  // Extract Assignee (handle if no assignee)\n  const assignee = body.issue?.assignee?.login || 'Unassigned';\n  \n  // Extract Repository Link\n  const repoLink = body.repository?.html_url || '';\n  \n  // Additional useful fields\n  const issueNumber = body.issue?.number || '';\n  const repoName = body.repository?.name || '';\n  const repoFullName = body.repository?.full_name || '';\n  const action = body.action || ''; // opened, closed, edited, etc.\n  \n  results.push({\n    json: {\n      issue_title: issueTitle,\n      issue_description: issueDescription,\n      assignee: assignee,\n      issue_link: issueLink,\n      repo_link: repoLink,\n      // Extra fields you might need\n      issue_number: issueNumber,\n      repo_name: repoName,\n      repo_full_name: repoFullName,\n      action: action\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3808,
+        240
+      ],
+      "id": "e31d3279-c4d3-4d1b-9d69-4a5325476788",
+      "name": "Parse Issue Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// GitHub Username to Odoo Employee Mapping\nconst githubToOdooMap = {\n  'PTechFusion': { odoo_user_id: 17, odoo_name: 'Muhammad Yasir Azeem' },\n  'WajahatAliKK': { odoo_user_id: 6, odoo_name: 'Wajahat Qaimkhani' },\n  'maryam521-0': { odoo_user_id: 7, odoo_name: 'Maryam Aslam' },\n  'ehtasham-farid': { odoo_user_id: 9, odoo_name: 'Ehtasham Fareed' },\n  'hamza-dev-tech': { odoo_user_id: 10, odoo_name: 'Hamza Shabbir' },\n  'Ramzanx0553': { odoo_user_id: 20, odoo_name: 'Ramzan' },\n  'wali-hu': { odoo_user_id: 25, odoo_name: 'Muhammad Abdullah' },\n  'aleesha-ramzan': { odoo_user_id: 8, odoo_name: 'Aleesha Ramzan' },\n  'nosheen-akhtar': { odoo_user_id: 11, odoo_name: 'Nosheen Akhtar' },\n  'rubina-farhat': { odoo_user_id: 12, odoo_name: 'Rubina Farhat' },\n  'samra-idrees': { odoo_user_id: 13, odoo_name: 'Samra Idrees' },\n  'usama-hassan': { odoo_user_id: 14, odoo_name: 'Usama Hassan' },\n  'osama-aurangzaib': { odoo_user_id: 16, odoo_name: 'Osama Aurangzaib' },\n  'mubashir-maqbool': { odoo_user_id: 18, odoo_name: 'Mubashir Maqbool' },\n  'ayesha-tariq': { odoo_user_id: 19, odoo_name: 'Ayesha Tariq' },\n  'sehar-aftab': { odoo_user_id: 23, odoo_name: 'Sehar Aftab' },\n  'muhammad-khizer': { odoo_user_id: 26, odoo_name: 'Muhammad Khizer' },\n  'muhammad-haider': { odoo_user_id: 27, odoo_name: 'Muhammad Haider' },\n  'saba-ghaffar': { odoo_user_id: 28, odoo_name: 'Saba Ghaffar' }\n};\n\n// Default assignee when no GitHub assignee\nconst DEFAULT_USER_ID = 23;\nconst DEFAULT_USER_NAME = 'Sehar Aftab';\n\n// Get the input data\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const data = item.json;\n  \n  // Get GitHub assignee username (already a string in your input)\n  const githubUsername = data.assignee || null;\n  \n  // Map to Odoo user\n  let odooUserId = null;\n  let odooUserName = 'Unassigned';\n  \n  if (githubUsername && githubToOdooMap[githubUsername]) {\n    // GitHub user found in mapping\n    odooUserId = githubToOdooMap[githubUsername].odoo_user_id;\n    odooUserName = githubToOdooMap[githubUsername].odoo_name;\n  } else if (githubUsername) {\n    // GitHub user exists but not mapped - assign to Sehar\n    odooUserId = DEFAULT_USER_ID;\n    odooUserName = DEFAULT_USER_NAME;\n  } else {\n    // No GitHub assignee - assign to Sehar\n    odooUserId = DEFAULT_USER_ID;\n    odooUserName = DEFAULT_USER_NAME;\n  }\n  \n  results.push({\n    json: {\n      // Pass through existing fields\n      issue_title: data.issue_title || 'No Title',\n      issue_description: data.issue_description || 'No Description',\n      issue_link: data.issue_link || '',\n      issue_number: data.issue_number || '',\n      repo_link: data.repo_link || '',\n      repo_name: data.repo_name || '',\n      repo_full_name: data.repo_full_name || '',\n      action: data.action || '',\n      \n      // GitHub assignee\n      github_assignee: githubUsername || 'Unassigned',\n      \n      // Mapped Odoo user\n      odoo_user_id: odooUserId,\n      odoo_user_name: odooUserName\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3536,
+        240
+      ],
+      "id": "d0d952a9-6655-4c79-85c0-49737c8ff72a",
+      "name": "Map Employees"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2480,
+        -96
+      ],
+      "id": "03ac3721-0156-4ebc-897c-7249167d4a9c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input data\nconst items = $input.all();\nconst data = items[0].json;\n\n// Employee list is in the 'name' array\nconst employeeList = data.name || [];\n\n// Get the assignee name to match\nconst assigneeName = data.odoo_user_name || '';\n\n// Validate: Check if assignee matches an employee (case-insensitive)\nlet isValidEmployee = false;\nfor (const empName of employeeList) {\n  if (empName.toLowerCase().trim() === assigneeName.toLowerCase().trim()) {\n    isValidEmployee = true;\n    break;\n  }\n}\n\n// Format issue description - add HTML line break after every full stop\nlet formattedIssueDescription = (data.issue_description || 'No description provided')\n  .replace(/\\. /g, '.<br><br>')\n  .replace(/\\n/g, '<br>');\n\n// Build HTML description for Odoo\nconst description = `<p><strong>Issue Number:</strong> #${data.issue_number || 'N/A'}</p>\n<p><strong>Repository Name:</strong> ${data.repo_name || 'N/A'}</p>\n<p><strong>Repository Full Name:</strong> ${data.repo_full_name || 'N/A'}</p>\n<p><strong>Action:</strong> ${data.action || 'N/A'}</p>\n<p><strong>Project Name:</strong> ${data.repo_name || 'N/A'}</p>\n<hr>\n<p><strong>Description:</strong></p>\n<p>${formattedIssueDescription}</p>\n<hr>\n<p><strong>Repository Link:</strong> <a href=\"${data.repo_link || '#'}\">${data.repo_link || 'N/A'}</a></p>\n<p><strong>Issue Link:</strong> <a href=\"${data.issue_link || '#'}\">${data.issue_link || 'N/A'}</a></p>`;\n\n// Return the formatted output with all fields\nreturn [{\n  json: {\n    // Task details\n    task_title: data.issue_title || 'No Title',\n    description: description,\n    \n    // Issue details\n    issue_title: data.issue_title || 'No Title',\n    issue_description: data.issue_description || '',\n    issue_link: data.issue_link || '',\n    issue_number: data.issue_number || '',\n    \n    // Repository details\n    repo_name: data.repo_name || '',\n    repo_full_name: data.repo_full_name || '',\n    repo_link: data.repo_link || '',\n    action: data.action || '',\n    \n    // GitHub assignee\n    assignee: data.assignee || data.github_assignee || '',\n    \n    // Odoo user details - only original user\n    user_id: data.odoo_user_id || null,\n    odoo_user_id: data.odoo_user_id || null,\n    odoo_user_name: data.odoo_user_name || 'Unassigned',\n    assignee_name: data.odoo_user_name || 'Unassigned',\n    \n    // Project details\n    project_id: data.project_id || 0,\n    project_name: data.project_name || '',\n    is_default: data.is_default || false,\n    \n    // Validation\n    is_valid_employee: isValidEmployee\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2208,
+        -96
+      ],
+      "id": "70155603-2d0c-4aa7-973f-371f0fc80f4b",
+      "name": "Validate Employees"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://erp.programmx.com/api/v1/todo",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $json.task_title, description: $json.description, project_id: $json.project_id, assigned_to: $json.assigned_to, user_id: $json.user_id }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1984,
+        -96
+      ],
+      "id": "0b020b69-fbf9-4e8e-8e87-1007d53e53ea",
+      "name": "Create ToDo",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7pCFggpiTuaSLRFX",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -3264,
+        224
+      ],
+      "id": "2dfb3d10-76c0-4644-aa46-6d24667b082f",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input data - already parsed with all fields\nconst items = $input.all();\nconst data = items[0].json;\n\nreturn [{\n  json: {\n    // Issue data\n    issue_title: data.issue_title || 'No Title',\n    issue_description: data.issue_description || '',\n    issue_link: data.issue_link || '',\n    issue_number: data.issue_number || '',\n    repo_name: data.repo_name || '',\n    repo_full_name: data.repo_full_name || '',\n    repo_link: data.repo_link || '',\n    action: data.action || '',\n    assignee: data.assignee || '',\n    \n    // Odoo user\n    odoo_user_id: data.odoo_user_id || null,\n    odoo_user_name: data.odoo_user_name || 'Unassigned',\n    \n    // Project\n    project_id: data.project_id || 0,\n    project_name: data.project_name || null,\n    match_score: data.match_score || 0,\n    is_default: data.is_default || false\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2832,
+        224
+      ],
+      "id": "15a611dd-574a-4ce5-95b2-522fa2108fc8",
+      "name": "Parse Data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://erp.programmx.com/api/v1/projects",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "_Vo3t259TXoTqwZghQejsxn4Yvw5l9a4OSVaU920DeA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -3632,
+        -128
+      ],
+      "id": "ee9d4562-0118-47a3-90c1-f4dccd0de7c1",
+      "name": "Fetch Projects"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://erp.programmx.com/api/v1/employees",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "_Vo3t259TXoTqwZghQejsxn4Yvw5l9a4OSVaU920DeA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "Fix bug in login"
+            },
+            {
+              "name": "description",
+              "value": "User cannot login with correct credentials"
+            },
+            {
+              "name": "project_id",
+              "value": "1"
+            },
+            {
+              "name": "user_id",
+              "value": "5"
+            },
+            {
+              "name": "priority",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -3776,
+        -416
+      ],
+      "id": "d5e85828-06be-403f-a09d-c10303b04d31",
+      "name": "Geting Employees"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get projects from Fetch Projects node\nconst projectsData = $('Fetch Projects').first().json;\nconst projects = projectsData.result?.data || projectsData.data || projectsData || [];\n\n// Get issue data from Map Employees node\nconst issueData = $('Map Employees').first().json;\nconst repoName = (issueData.repo_name || '').toLowerCase();\n\n// Clean repo name for matching\nconst repoNameClean = repoName\n  .replace(/-/g, ' ')\n  .replace(/_/g, ' ')\n  .replace(/[^a-z0-9 ]/g, '')\n  .trim();\n\n// Default project - null/0 when no match\nconst DEFAULT_PROJECT_ID = 0;\nconst DEFAULT_PROJECT_NAME = null;  // Changed from 'GitHub Issues' to null\n\nlet matchedProjectId = DEFAULT_PROJECT_ID;\nlet matchedProjectName = DEFAULT_PROJECT_NAME;\nlet bestScore = 0;\n\n// Common words to ignore (they match too many projects)\nconst ignoreWords = ['automation', 'app', 'repo', 'project', 'task', 'temp', 'test', 'dev', 'development', 'work', 'data'];\n\n// Find best matching project\nfor (const project of projects) {\n  const projectName = (project.name || '').toLowerCase();\n  const projectNameClean = projectName\n    .replace(/-/g, ' ')\n    .replace(/_/g, ' ')\n    .replace(/[^a-z0-9 ]/g, '')\n    .trim();\n  \n  let score = 0;\n  \n  // Exact match\n  if (projectNameClean === repoNameClean) {\n    score = 100;\n  }\n  // Contains full name match\n  else if (projectNameClean.includes(repoNameClean) || repoNameClean.includes(projectNameClean)) {\n    score = 50;\n  }\n  // Word overlap (only count meaningful words)\n  else {\n    const repoWords = repoNameClean.split(/\\s+/).filter(w => w.length > 2 && !ignoreWords.includes(w));\n    const projWords = projectNameClean.split(/\\s+/).filter(w => w.length > 2 && !ignoreWords.includes(w));\n    \n    let matchedWords = 0;\n    \n    for (const rw of repoWords) {\n      for (const pw of projWords) {\n        if (rw === pw) {\n          score += 25;\n          matchedWords++;\n        } else if ((rw.length > 4 && pw.length > 4) && (rw.includes(pw) || pw.includes(rw))) {\n          score += 15;\n          matchedWords++;\n        }\n      }\n    }\n    \n    // Require at least 2 matching words for a valid match\n    if (matchedWords < 2) {\n      score = 0;\n    }\n  }\n  \n  // Update best match if score is higher\n  if (score > bestScore) {\n    bestScore = score;\n    matchedProjectId = project.id;\n    matchedProjectName = project.name;\n  }\n}\n\n// If score is too low, use default (null/0)\nif (bestScore < 30) {\n  matchedProjectId = DEFAULT_PROJECT_ID;\n  matchedProjectName = DEFAULT_PROJECT_NAME;  // Will be null\n  bestScore = 0;\n}\n\n// Return combined data\nreturn [{\n  json: {\n    // Issue data from Map Employees\n    issue_title: issueData.issue_title || 'No Title',\n    issue_description: issueData.issue_description || '',\n    issue_link: issueData.issue_link || '',\n    issue_number: issueData.issue_number || '',\n    repo_name: issueData.repo_name || '',\n    repo_full_name: issueData.repo_full_name || '',\n    repo_link: issueData.repo_link || '',\n    action: issueData.action || '',\n    assignee: issueData.assignee || issueData.github_assignee || '',\n    odoo_user_id: issueData.odoo_user_id || null,\n    odoo_user_name: issueData.odoo_user_name || 'Unassigned',\n    \n    // Matched project\n    project_id: matchedProjectId,\n    project_name: matchedProjectName,  // Will be null if no match\n    match_score: bestScore,\n    is_default: matchedProjectId === DEFAULT_PROJECT_ID\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3056,
+        224
+      ],
+      "id": "989b7979-c0ab-46c2-ad65-7f131c53707e",
+      "name": "Match Project"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Geting Employees",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Parse Issue Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Projects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retriving Data": {
+      "main": [
+        [
+          {
+            "node": "Get All names",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All names": {
+      "main": [
+        [
+          {
+            "node": "All Names",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Issue Data": {
+      "main": [
+        [
+          {
+            "node": "Map Employees",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Employees": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "All Names": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Validate Employees",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Employees": {
+      "main": [
+        [
+          {
+            "node": "Create ToDo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Match Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Projects": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Geting Employees": {
+      "main": [
+        [
+          {
+            "node": "Retriving Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Project": {
+      "main": [
+        [
+          {
+            "node": "Parse Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6304c6f0-9a5b-4ad7-9db6-1e43091ac05b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "151305d708accaf9ba7df3ae300984e7c14a108b131ed2d081a3bd48f670f5c4"
+  },
+  "id": "5Q76JwwBqF6Qh1Pt",
+  "tags": []
+}
